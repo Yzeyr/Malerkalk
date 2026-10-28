@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Malerkalk</title>
+<meta name="description" content="Avrettingsmasse til flatt gulv og bad med fall, og fall til sluk. Sekker, kilo og vann.">
+<meta name="theme-color" content="#1D1815">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Malerkalk">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+  /* Samme malerpalett som Malerguiden: varmt lerret, mørkt blekk. */
+  :root {
+    --lerret: #F5EFE6; --kort: #FFFDF9; --kort2: #F0E7DB;
+    --blekk: #2B231E; --blekk2: #5B5048; --blekk3: #8A7D72; --linje: #E3D7C8;
+    --skygge: 0 1px 0 var(--linje), 0 8px 20px -14px rgba(60, 40, 20, .38);
+    --c: #3B4CA0; --petrol: #1E6B74; --ultramarin: #3B4CA0; --oker: #D9972A;
+    --varsel: #FBEFD9; --varsel-kant: #C9861E;
+    --serif: ui-serif, "New York", "Iowan Old Style", Georgia, "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
+    --topp: env(safe-area-inset-top, 0px); --bunn: env(safe-area-inset-bottom, 0px);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --lerret: #1A1613; --kort: #25201C; --kort2: #302924;
+      --blekk: #F4EDE4; --blekk2: #C2B6AA; --blekk3: #8F8378; --linje: #3A322C;
+      --skygge: 0 1px 0 rgba(0, 0, 0, .3);
+      --petrol: #2A7F89; --ultramarin: #5568BF; --oker: #E0A43C;
+      --varsel: #33291A; --varsel-kant: #E0A43C;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--lerret); color: var(--blekk); font: 17px/1.45 var(--sans); }
+  button, input, select { font: inherit; color: inherit; }
+
+  .statusflate { position: fixed; inset: 0 0 auto; height: var(--topp); background: #1D1815; z-index: 30; }
+  .side { max-width: 560px; margin: 0 auto; padding: calc(var(--topp) + 18px) 16px calc(var(--bunn) + 40px); }
+
+  header h1 { font: 700 30px/1.1 var(--serif); margin: 4px 2px 2px; letter-spacing: -.01em; }
+  header p { margin: 0 2px 16px; color: var(--blekk2); font-size: 15px; }
+
+  /* Faner */
+  .faner { display: flex; gap: 6px; background: var(--kort2); padding: 4px; border-radius: 16px; margin-bottom: 14px; position: sticky; top: calc(var(--topp) + 6px); z-index: 10; }
+  .faner button { flex: 1; border: 0; background: none; border-radius: 12px; min-height: 44px; padding: 6px 4px; font-weight: 650; font-size: 15px; color: var(--blekk2); }
+  .faner button[aria-selected="true"] { background: var(--kort); color: var(--blekk); box-shadow: var(--skygge); }
+
+  .kalk[hidden] { display: none; }
+  .kalk.petrol { --c: var(--petrol); }
+  .kalk.ultramarin { --c: var(--ultramarin); }
+  .kalk.oker { --c: var(--oker); }
+
+  /* Svaret øverst */
+  .svar { background: var(--c); color: #fff; border-radius: 22px; padding: 16px 18px 14px; margin-bottom: 14px; position: relative; overflow: hidden; }
+  .svar::after { content: ""; position: absolute; right: -40px; top: -40px; width: 150px; height: 150px; border-radius: 50%; background: rgba(255,255,255,.09); }
+  .kalk.oker .svar { color: #2B1D0A; }
+  .svar .over { font-size: 12.5px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; opacity: .85; }
+  .svar .stort { font: 700 44px/1.05 var(--serif); margin: 4px 0 8px; position: relative; z-index: 1; }
+  .svar .stort small { font-size: 20px; opacity: .85; margin-left: 6px; }
+  .svar .rader { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; position: relative; z-index: 1; }
+  .svar .rader div { opacity: .92; }
+  .svar .rader b { display: block; font: 700 18px/1.2 var(--serif); }
+  .svar .kopier { position: absolute; right: 12px; bottom: 12px; z-index: 2; border: 0; border-radius: 99px; background: rgba(255,255,255,.2); color: inherit; font-size: 14px; font-weight: 700; padding: 7px 13px; }
+
+  /* Feltene */
+  .kort { background: var(--kort); border-radius: 18px; box-shadow: var(--skygge); padding: 4px 14px; margin-bottom: 12px; }
+  .felt { display: flex; align-items: center; gap: 10px; min-height: 62px; padding: 8px 0; }
+  .felt + .felt { border-top: 1px solid var(--linje); }
+  .felt .navn { flex: 1; min-width: 0; font-weight: 600; font-size: 16px; }
+  .felt .navn small { display: block; font-weight: 450; font-size: 13.5px; color: var(--blekk3); }
+  .tall { display: flex; align-items: center; background: var(--kort2); border-radius: 12px; }
+  .tall button { border: 0; background: none; width: 40px; height: 44px; font-size: 22px; font-weight: 600; color: var(--blekk2); }
+  .tall input { width: 64px; border: 0; background: none; text-align: center; font-weight: 750; font-size: 18px; padding: 8px 0; -moz-appearance: textfield; }
+  .tall input:focus { outline: 2px solid var(--c); border-radius: 8px; }
+  .tall .enhet { font-size: 13px; color: var(--blekk3); padding-right: 10px; margin-left: -4px; min-width: 22px; }
+  .felt select { max-width: 52%; border: 0; background: var(--kort2); border-radius: 12px; padding: 10px 12px; font-weight: 600; font-size: 15px; }
+  .bryter { appearance: none; -webkit-appearance: none; width: 51px; height: 31px; border-radius: 99px; background: var(--linje); position: relative; transition: .2s; flex: none; margin: 0; }
+  .bryter::after { content: ""; position: absolute; left: 2px; top: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.2); transition: .2s; }
+  .bryter:checked { background: var(--c); }
+  .bryter:checked::after { left: 22px; }
+
+  details.mer { margin: 0 0 12px; }
+  details.mer summary { list-style: none; cursor: pointer; color: var(--blekk2); font-weight: 650; font-size: 15px; padding: 8px 4px; }
+  details.mer summary::-webkit-details-marker { display: none; }
+  details.mer summary::before { content: "＋ "; }
+  details.mer[open] summary::before { content: "－ "; }
+
+  .varsel { background: var(--varsel); border-left: 4px solid var(--varsel-kant); border-radius: 12px; padding: 10px 12px; font-size: 15px; margin-bottom: 8px; }
+  .merknad { color: var(--blekk3); font-size: 14px; margin: 4px 4px 0; }
+
+  /* Fall til sluk */
+  .fallrad { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 12px 0; }
+  .fallrad + .fallrad { border-top: 1px solid var(--linje); }
+  .fallrad b { font: 700 26px/1 var(--serif); color: var(--c); }
+  .fallrad span small { display: block; color: var(--blekk3); font-size: 13.5px; }
+
+  /* Pris-fanen: Malerguidens hurtigpris fyller resten av skjermen under fanene */
+  .prisramme { position: fixed; left: 0; right: 0; bottom: 0; width: 100%; border: 0; background: var(--lerret); z-index: 5; }
+  body.pris-aktiv { overflow: hidden; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(var(--bunn) + 24px); transform: translate(-50%, 20px); opacity: 0; transition: .2s; pointer-events: none; background: var(--blekk); color: var(--lerret); padding: 11px 16px; border-radius: 14px; font-weight: 600; font-size: 15px; }
+  .toast.vis { opacity: 1; transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+<div class="statusflate"></div>
+<div class="side">
+  <header>
+    <h1>Malerkalk</h1>
+    <p>Avrettingsmasse, fall og rask pris. Tallene er overslag. Sjekk produktets datablad før du bestiller.</p>
+  </header>
+
+  <div class="faner" role="tablist">
+    <button type="button" role="tab" data-fane="flatt">Gulv</button>
+    <button type="button" role="tab" data-fane="bad">Bad</button>
+    <button type="button" role="tab" data-fane="fall">Fall</button>
+    <button type="button" role="tab" data-fane="pris">Pris</button>
+  </div>
+
+  <!-- Flatt gulv -->
+  <section class="kalk ultramarin" data-kalk="flatt" hidden>
+    <div class="svar" aria-live="polite">
+      <div class="over">Trenger ca.</div>
+      <div class="stort" id="fb-sekker">—</div>
+      <div class="rader"><div>Masse inkl. svinn<b id="fb-kg">—</b></div><div>Vann<b id="fb-vann">—</b></div></div>
+      <button type="button" class="kopier" data-kopier="flatt">Kopier</button>
+    </div>
+    <div class="kort">
+      <div class="felt"><span class="navn">Areal</span><span class="tall" data-steg="1"><button type="button" aria-label="Mindre">−</button><input id="fb-areal" inputmode="decimal" autocomplete="off" value="20"><span class="enhet">m²</span><button type="button" aria-label="Mer">+</button></span></div>
+      <div class="felt"><span class="navn">Lagtykkelse<small>Snitt over hele gulvet</small></span><span class="tall" data-steg="1"><button type="button" aria-label="Mindre">−</button><input id="fb-tykk" inputmode="decimal" autocomplete="off" value="5"><span class="enhet">mm</span><button type="button" aria-label="Mer">+</button></span></div>
+      <div class="felt"><span class="navn">Varmekabel i gulvet</span><input type="checkbox" class="bryter" id="fb-varme"></div>
+    </div>
+    <details class="mer"><summary>Forbruk, svinn og sekk</summary>
+      <div class="kort">
+        <div class="felt"><span class="navn">Forbruk<small>kg per mm per m²</small></span><span class="tall" data-steg="0.05"><button type="button" aria-label="Mindre">−</button><input id="fb-forbruk" inputmode="decimal" autocomplete="off" value="1,75"><span class="enhet"></span><button type="button" aria-label="Mer">+</button></span></div>
+        <div class="felt"><span class="navn">Svinn<small>Påslag</small></span><span class="tall" data-steg="5"><button type="button" aria-label="Mindre">−</button><input id="fb-svinn" inputmode="decimal" autocomplete="off" value="10"><span class="enhet">%</span><button type="button" aria-label="Mer">+</button></span></div>
+        <div class="felt"><span class="navn">Sekk</span><span class="tall" data-steg="5"><button type="button" aria-label="Mindre">−</button><input id="fb-sekk" inputmode="decimal" autocomplete="off" value="20"><span class="enhet">kg</span><button type="button" aria-label="Mer">+</button></span></div>
+      </div>
+    </details>
+    <div id="fb-varsler"></div>
+    <p class="merknad">Vannet regnes med 3,6 liter per 20 kg sekk (weberfloor 120 Reno). Andre produkter blandes annerledes, så sjekk sekken.</p>
+  </section>
+
+  <!-- Bad med fall -->
+  <section class="kalk petrol" data-kalk="bad" hidden>
+    <div class="svar" aria-live="polite">
+      <div class="over">Trenger ca.</div>
+      <div class="stort" id="bad-sekker">—</div>
+      <div class="rader">
+        <div>Masse inkl. svinn<b id="bad-kg">—</b></div>
+        <div>Vann<b id="bad-vann">—</b></div>
+        <div>Sluk → kant → høyest<b id="bad-spenn">—</b></div>
+      </div>
+      <button type="button" class="kopier" data-kopier="bad">Kopier</button>
+    </div>
+    <div class="kort">
+      <div class="felt"><span class="navn">Areal, hele badet</span><span class="tall" data-steg="0.5"><button type="button" aria-label="Mindre">−</button><input id="bad-areal" inputmode="decimal" autocomplete="off" value="6"><span class="enhet">m²</span><button type="button" aria-label="Mer">+</button></span></div>
+      <div class="felt"><span class="navn">Areal, dusjsonen<small>Faller 1:50 mot sluket</small></span><span class="tall" data-steg="0.1"><button type="button" aria-label="Mindre">−</button><input id="bad-dusj" inputmode="decimal" autocomplete="off" value="1"><span class="enhet">m²</span><button type="button" aria-label="Mer">+</button></span></div>
+      <div class="felt"><span class="navn">Tykkelse ved sluket<small>Minst 4 mm</small></span><span class="tall" data-steg="1"><button type="button" aria-label="Mindre">−</button><input id="bad-sluk" inputmode="decimal" autocomplete="off" value="5"><span class="enhet">mm</span><button type="button" aria-label="Mer">+</button></span></div>
+      <div class="felt"><span class="navn">Sluk til dusjsonekant</span><span class="tall" data-steg="0.1"><button type="button" aria-label="Mindre">−</button><input id="bad-kant" inputmode="decimal" autocomplete="off" value="0,5"><span class="enhet">m</span><button type="button" aria-label="Mer">+</button></span></div>
+      <div class="felt"><span class="navn">Sluk til høyeste punkt<small>Ofte døra. Faller 1:100 utenfor dusjen</small></span><span class="tall" data-steg="0.1"><button type="button" aria-label="Mindre">−</button><input id="bad-hoy" inputmode="decimal" autocomplete="off" value="2"><span class="enhet">m</span><button type="button" aria-label="Mer">+</button></span></div>
+      <div class="felt"><span class="navn">Fallform</span><select id="bad-form"><option value="0.6667">Fra alle kanter mot punktsluk</option><option value="0.5">Én retning (renne)</option></select></div>
+      <div class="felt"><span class="navn">Varmekabel i gulvet</span><input type="checkbox" class="bryter" id="bad-varme"></div>
+    </div>
+    <details class="mer"><summary>Forbruk, svinn og sekk</summary>
+      <div class="kort">
+        <div class="felt"><span class="navn">Forbruk<small>kg per mm per m²</small></span><span class="tall" data-steg="0.05"><button type="button" aria-label="Mindre">−</button><input id="bad-forbruk" inputmode="decimal" autocomplete="off" value="1,75"><span class="enhet"></span><button type="button" aria-label="Mer">+</button></span></div>
+        <div class="felt"><span class="navn">Svinn<small>Påslag</small></span><span class="tall" data-steg="5"><button type="button" aria-label="Mindre">−</button><input id="bad-svinn" inputmode="decimal" autocomplete="off" value="10"><span class="enhet">%</span><button type="button" aria-label="Mer">+</button></span></div>
+        <div class="felt"><span class="navn">Sekk</span><span class="tall" data-steg="5"><button type="button" aria-label="Mindre">−</button><input id="bad-sekk" inputmode="decimal" autocomplete="off" value="20"><span class="enhet">kg</span><button type="button" aria-label="Mer">+</button></span></div>
+      </div>
+    </details>
+    <div id="bad-varsler"></div>
+    <p class="merknad">Jevnt fall i hver sone: 1:50 fra sluket ut til dusjsonekanten, så 1:100 videre til høyeste punkt. Rør, ujevnt undergulv og nedsenket dusj endrer forbruket, så legg på ved tvil.</p>
+  </section>
+
+  <!-- Pris: hurtigprisen fra Malerguiden (samme nettsted, så rom og priser deles) -->
+  <section class="kalk" data-kalk="pris" hidden>
+    <noscript>Prisen krever JavaScript.</noscript>
+  </section>
+
+  <!-- Fall til sluk -->
+  <section class="kalk oker" data-kalk="fall" hidden>
+    <div class="kort">
+      <div class="felt"><span class="navn">Avstand fra sluket</span><span class="tall" data-steg="0.1"><button type="button" aria-label="Mindre">−</button><input id="fall-dist" inputmode="decimal" autocomplete="off" value="1,5"><span class="enhet">m</span><button type="button" aria-label="Mer">+</button></span></div>
+    </div>
+    <div class="kort">
+      <div class="fallrad"><span>1:50<small>Dusjsonen, 20 mm per meter</small></span><b id="fall-50">—</b></div>
+      <div class="fallrad"><span>1:100<small>Resten av gulvet, 10 mm per meter</small></span><b id="fall-100">—</b></div>
+    </div>
+    <p class="merknad">Kravet gjelder ferdig gulv, altså med beleggets tykkelse.</p>
+  </section>
+</div>
+<div class="toast" role="status" aria-live="polite"></div>
+
+<script>
+  'use strict';
+  // Lagres i nettleseren. Opphavet deles med andre apper på yzeyr.github.io,
+  // så alt ligger under egne nøkler og ingenting annet røres.
+  var NOKKEL = 'malerkalk:felt', FANE = 'malerkalk:fane';
+  var VANN_PER_KG = 3.6 / 20; // weberfloor 120 Reno
+  var VARMEKABEL = 'Varmekabel: minste overdekning over kabelen styres ofte av kabelprodusenten, ikke bare av massens minstemål på 4 mm. Sjekk kabeldatabladet.';
+
+  function $(id) { return document.getElementById(id); }
+  // Norske brukere skriver komma. Godta begge.
+  function tall(id) { var v = parseFloat(($(id).value || '').replace(/\s/g, '').replace(',', '.')); return isFinite(v) ? v : NaN; }
+  function fmt(v, d) { return isFinite(v) ? v.toLocaleString('nb-NO', { minimumFractionDigits: d, maximumFractionDigits: d }) : '—'; }
+  function sett(id, s) { $(id).textContent = s; }
+  function sekker(n) { return n + (n === 1 ? ' sekk' : ' sekker'); }
+  function varsler(id, liste) {
+    var el = $(id); el.textContent = '';
+    liste.forEach(function (t) { var d = document.createElement('div'); d.className = 'varsel'; d.textContent = t; el.appendChild(d); });
+  }
+  function svinn(id) { var s = tall(id); return 1 + (isFinite(s) ? s : 0) / 100; }
+
+  var tekst = {};
+
+  function regnFlatt() {
+    var areal = tall('fb-areal'), tykk = tall('fb-tykk'), forbruk = tall('fb-forbruk'), sekk = tall('fb-sekk');
+    if (![areal, tykk, forbruk, sekk].every(function (v) { return isFinite(v) && v > 0; })) {
+      ['fb-sekker', 'fb-kg', 'fb-vann'].forEach(function (i) { sett(i, '—'); });
+      varsler('fb-varsler', ['Fyll inn areal, lagtykkelse, forbruk og sekkestørrelse.']); tekst.flatt = ''; return;
+    }
+    var kg = areal * tykk * forbruk * svinn('fb-svinn'), n = Math.ceil(kg / sekk), vann = n * sekk * VANN_PER_KG;
+    $('fb-sekker').innerHTML = n + '<small>' + (n === 1 ? 'sekk' : 'sekker') + '</small>';
+    sett('fb-kg', fmt(kg, 0) + ' kg'); sett('fb-vann', fmt(vann, 0) + ' liter');
+    var v = [];
+    if (tykk < 4) v.push('Lagtykkelsen er under minste lagtykkelse på 4 mm (weberfloor 120 Reno).');
+    if (tykk > 50) v.push('Over 50 mm i ett sjikt. Bygg opp i flere omganger, med priming mellom.');
+    if ($('fb-varme').checked) v.push(VARMEKABEL);
+    varsler('fb-varsler', v);
+    tekst.flatt = 'Avretting ' + fmt(areal, 1) + ' m² × ' + fmt(tykk, 0) + ' mm: ' + sekker(n) + ' à ' + fmt(sekk, 0) + ' kg (' + fmt(kg, 0) + ' kg inkl. svinn), ca. ' + fmt(vann, 0) + ' liter vann.';
+  }
+
+  function regnBad() {
+    var areal = tall('bad-areal'), dusj = tall('bad-dusj'), sluk = tall('bad-sluk'), kant = tall('bad-kant'), hoy = tall('bad-hoy');
+    var forbruk = tall('bad-forbruk'), sekk = tall('bad-sekk'), faktor = parseFloat($('bad-form').value) || 0.6667;
+    var ok = [areal, dusj, sluk, kant, hoy, forbruk, sekk].every(function (v) { return isFinite(v) && v >= 0; }) && areal > 0 && forbruk > 0 && sekk > 0;
+    if (!ok) {
+      ['bad-sekker', 'bad-kg', 'bad-vann', 'bad-spenn'].forEach(function (i) { sett(i, '—'); });
+      varsler('bad-varsler', ['Fyll inn areal, avstander, forbruk og sekkestørrelse.']); tekst.bad = ''; return;
+    }
+    // Dusjsonen faller 1:50 (20 mm/m) fra sluket til kanten, resten 1:100 (10 mm/m) ut til høyeste punkt.
+    // Snittet av et fall mot et punktsluk er 2/3 av fallhøyden (pyramide), mot en renne 1/2.
+    var rest = Math.max(areal - dusj, 0);
+    var fallDusj = kant * 20, hKant = sluk + fallDusj;
+    var fallRest = Math.max(hoy - kant, 0) * 10, hHoy = hKant + fallRest;
+    var snittDusj = sluk + fallDusj * faktor, snittRest = hKant + fallRest * faktor;
+    var kg = (dusj * snittDusj + rest * snittRest) * forbruk * svinn('bad-svinn');
+    var n = Math.ceil(kg / sekk), vann = n * sekk * VANN_PER_KG;
+    $('bad-sekker').innerHTML = n + '<small>' + (n === 1 ? 'sekk' : 'sekker') + '</small>';
+    sett('bad-kg', fmt(kg, 0) + ' kg'); sett('bad-vann', fmt(vann, 0) + ' liter');
+    sett('bad-spenn', fmt(sluk, 0) + ' → ' + fmt(hKant, 0) + ' → ' + fmt(hHoy, 0) + ' mm');
+    var v = [];
+    if (dusj > areal) v.push('Dusjsonen er større enn hele badet. Sjekk arealene.');
+    if (hoy < kant) v.push('Høyeste punkt er nærmere sluket enn dusjsonekanten. Sjekk avstandene.');
+    if (sluk < 4) v.push('Tykkelsen ved sluket er under minste lagtykkelse på 4 mm (weberfloor 120 Reno).');
+    if (hHoy > 50) v.push('Høyeste punkt blir ' + fmt(hHoy, 0) + ' mm, over 50 mm i ett sjikt. Bygg opp i flere omganger, med priming mellom.');
+    if ($('bad-varme').checked) v.push(VARMEKABEL);
+    varsler('bad-varsler', v);
+    tekst.bad = 'Bad ' + fmt(areal, 1) + ' m² med fall (' + fmt(sluk, 0) + ' → ' + fmt(hKant, 0) + ' → ' + fmt(hHoy, 0) + ' mm): ' + sekker(n) + ' à ' + fmt(sekk, 0) + ' kg (' + fmt(kg, 0) + ' kg inkl. svinn), ca. ' + fmt(vann, 0) + ' liter vann.';
+  }
+
+  function regnFall() {
+    var d = tall('fall-dist');
+    sett('fall-50', d > 0 ? fmt(d * 20, 0) + ' mm' : '—');
+    sett('fall-100', d > 0 ? fmt(d * 10, 0) + ' mm' : '—');
+  }
+
+  function regnAlt() { regnFlatt(); regnBad(); regnFall(); }
+
+  // Husk det som er skrevet inn
+  var FELT = Array.prototype.map.call(document.querySelectorAll('.kalk input, .kalk select'), function (el) { return el.id; });
+  function lagre() {
+    var v = {};
+    FELT.forEach(function (id) { var el = $(id); v[id] = el.type === 'checkbox' ? el.checked : el.value; });
+    try { localStorage.setItem(NOKKEL, JSON.stringify(v)); } catch (e) { /* privat modus: bare ikke lagre */ }
+  }
+  try {
+    var lagret = JSON.parse(localStorage.getItem(NOKKEL) || '{}');
+    FELT.forEach(function (id) {
+      if (!(id in lagret)) return;
+      var el = $(id);
+      if (el.type === 'checkbox') el.checked = lagret[id] === true; else el.value = String(lagret[id]);
+    });
+  } catch (e) { /* ødelagt eller blokkert: bruk standardtallene */ }
+
+  document.querySelectorAll('.kalk input, .kalk select').forEach(function (el) {
+    el.addEventListener('input', function () { regnAlt(); lagre(); });
+    el.addEventListener('change', function () { regnAlt(); lagre(); });
+  });
+
+  // − og +
+  document.querySelectorAll('.tall').forEach(function (boks) {
+    var inn = boks.querySelector('input'), steg = parseFloat(boks.dataset.steg) || 1;
+    var knapper = boks.querySelectorAll('button');
+    function endre(retning) {
+      var v = tall(inn.id); if (!isFinite(v)) v = 0;
+      var ny = Math.max(0, Math.round((v + retning * steg) / steg) * steg);
+      var des = (String(steg).split('.')[1] || '').length;
+      inn.value = fmt(ny, des).replace(/\s/g, '');
+      regnAlt(); lagre();
+    }
+    knapper[0].addEventListener('click', function () { endre(-1); });
+    knapper[1].addEventListener('click', function () { endre(1); });
+  });
+
+  // Faner
+  // Pris: lastes først når fanen åpnes. Kopier til jobb åpner jobben i Malerguiden.
+  var ramme = null;
+  function plasserRamme() {
+    if (!ramme) return;
+    var topp = Math.round(document.querySelector('.faner').getBoundingClientRect().bottom + 8);
+    ramme.style.top = topp + 'px';
+    ramme.style.height = (innerHeight - topp) + 'px'; // en iframe strekker seg ikke av seg selv
+  }
+  function visFane(navn) {
+    document.querySelectorAll('.faner button').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.fane === navn)); });
+    document.querySelectorAll('.kalk').forEach(function (k) { k.hidden = k.dataset.kalk !== navn; });
+    var pris = navn === 'pris';
+    document.body.classList.toggle('pris-aktiv', pris);
+    if (pris && !ramme) {
+      ramme = document.createElement('iframe');
+      ramme.className = 'prisramme';
+      ramme.title = 'Hurtigpris';
+      ramme.src = '../Malerguiden/#hurtigpris';
+      document.body.appendChild(ramme);
+    }
+    if (ramme) ramme.hidden = !pris;
+    if (pris) { scrollTo(0, 0); plasserRamme(); }
+    try { localStorage.setItem(FANE, navn); } catch (e) { /* ingen lagring */ }
+  }
+  addEventListener('resize', plasserRamme);
+  document.querySelectorAll('.faner button').forEach(function (b) { b.addEventListener('click', function () { visFane(b.dataset.fane); }); });
+  var startFane = 'flatt';
+  try { startFane = localStorage.getItem(FANE) || 'flatt'; } catch (e) { /* standard */ }
+  visFane(['flatt', 'bad', 'fall', 'pris'].indexOf(startFane) >= 0 ? startFane : 'flatt');
+
+  // Kopier svaret, f.eks. til en bestilling
+  var toastEl = document.querySelector('.toast'), toastTid;
+  function toast(t) { toastEl.textContent = t; toastEl.classList.add('vis'); clearTimeout(toastTid); toastTid = setTimeout(function () { toastEl.classList.remove('vis'); }, 2200); }
+  document.querySelectorAll('[data-kopier]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = tekst[b.dataset.kopier];
+      if (!t) { toast('Fyll inn tallene først.'); return; }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { toast('Kopiert.'); }, function () { toast(t); });
+      else toast(t);
+    });
+  });
+
+  regnAlt();
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () { /* fungerer uten */ });
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#1D1815"/>
+  <!-- Sekk med avrettingsmasse -->
+  <path d="M352 236 Q512 196 672 236 L716 300 Q760 560 716 742 Q512 790 308 742 Q264 560 308 300 Z" fill="#3B4CA0"/>
+  <path d="M352 236 Q512 196 672 236 L716 300 Q512 330 308 300 Z" fill="#5568BF"/>
+  <path d="M420 228 Q512 150 604 228" fill="none" stroke="#2A367A" stroke-width="26" stroke-linecap="round"/>
+  <rect x="372" y="430" width="280" height="150" rx="26" fill="#F5EFE6"/>
+  <!-- Vater: boble i midten -->
+  <rect x="404" y="486" width="216" height="38" rx="19" fill="none" stroke="#2B231E" stroke-width="14"/>
+  <circle cx="512" cy="505" r="13" fill="#D9972A"/>
+  <!-- Gulvet, med fall mot sluket -->
+  <path d="M170 858 L854 858" stroke="#F5EFE6" stroke-width="30" stroke-linecap="round"/>
+  <path d="M230 820 L512 846 L794 820" fill="none" stroke="#D9972A" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
