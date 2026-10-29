@@ -18,7 +18,7 @@
     --lerret: #F5EFE6; --kort: #FFFDF9; --kort2: #F0E7DB;
     --blekk: #2B231E; --blekk2: #5B5048; --blekk3: #8A7D72; --linje: #E3D7C8;
     --skygge: 0 1px 0 var(--linje), 0 8px 20px -14px rgba(60, 40, 20, .38);
-    --c: #3B4CA0; --petrol: #1E6B74; --ultramarin: #3B4CA0; --oker: #D9972A;
+    --c: #3B4CA0; --petrol: #1E6B74; --ultramarin: #3B4CA0; --oker: #D9972A; --oker-tekst: #8A5A0B;
     --varsel: #FBEFD9; --varsel-kant: #C9861E;
     --serif: ui-serif, "New York", "Iowan Old Style", Georgia, "Times New Roman", serif;
     --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
@@ -30,7 +30,7 @@
       --lerret: #1A1613; --kort: #25201C; --kort2: #302924;
       --blekk: #F4EDE4; --blekk2: #C2B6AA; --blekk3: #8F8378; --linje: #3A322C;
       --skygge: 0 1px 0 rgba(0, 0, 0, .3);
-      --petrol: #2A7F89; --ultramarin: #5568BF; --oker: #E0A43C;
+      --petrol: #2A7F89; --ultramarin: #5568BF; --oker: #E0A43C; --oker-tekst: #E0A43C;
       --varsel: #33291A; --varsel-kant: #E0A43C;
       color-scheme: dark;
     }
@@ -79,7 +79,7 @@
   .tall input { width: 64px; border: 0; background: none; text-align: center; font-weight: 750; font-size: 18px; padding: 8px 0; -moz-appearance: textfield; }
   .tall input:focus { outline: 2px solid var(--c); border-radius: 8px; }
   .tall .enhet { font-size: 13px; color: var(--blekk3); padding-right: 10px; margin-left: -4px; min-width: 22px; }
-  .felt select { max-width: 52%; border: 0; background: var(--kort2); border-radius: 12px; padding: 10px 12px; font-weight: 600; font-size: 15px; }
+  .felt select { max-width: 52%; border: 0; background: var(--kort2); border-radius: 12px; padding: 10px 12px; font-weight: 600; font-size: 16px; } /* 16 px: iPhone zoomer ikke inn */
   .bryter { appearance: none; -webkit-appearance: none; width: 51px; height: 31px; border-radius: 99px; background: var(--linje); position: relative; transition: .2s; flex: none; margin: 0; }
   .bryter::after { content: ""; position: absolute; left: 2px; top: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.2); transition: .2s; }
   .bryter:checked { background: var(--c); }
@@ -98,11 +98,16 @@
   .fallrad { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 12px 0; }
   .fallrad + .fallrad { border-top: 1px solid var(--linje); }
   .fallrad b { font: 700 26px/1 var(--serif); color: var(--c); }
+  .kalk.oker .fallrad b { color: var(--oker-tekst); } /* mørkere oker, så tallene kan leses på lyst kort */
   .fallrad span small { display: block; color: var(--blekk3); font-size: 13.5px; }
 
   /* Pris-fanen: Malerguidens hurtigpris fyller resten av skjermen under fanene */
   .prisramme { position: fixed; left: 0; right: 0; bottom: 0; width: 100%; border: 0; background: var(--lerret); z-index: 5; }
   body.pris-aktiv { overflow: hidden; }
+  body.pris-aktiv header { display: none; } /* mer plass til prisen */
+  .prisfeil { text-align: center; padding: 22px 16px; }
+  .prisfeil p { margin: 0 0 14px; color: var(--blekk2); }
+  .prisfeil button { border: 0; border-radius: 14px; background: var(--blekk); color: var(--lerret); font-weight: 700; padding: 12px 20px; min-height: 44px; }
 
   .toast { position: fixed; left: 50%; bottom: calc(var(--bunn) + 24px); transform: translate(-50%, 20px); opacity: 0; transition: .2s; pointer-events: none; background: var(--blekk); color: var(--lerret); padding: 11px 16px; border-radius: 14px; font-weight: 600; font-size: 15px; }
   .toast.vis { opacity: 1; transform: translate(-50%, 0); }
@@ -176,12 +181,17 @@
       </div>
     </details>
     <div id="bad-varsler"></div>
-    <p class="merknad">Jevnt fall i hver sone: 1:50 fra sluket ut til dusjsonekanten, så 1:100 videre til høyeste punkt. Rør, ujevnt undergulv og nedsenket dusj endrer forbruket, så legg på ved tvil.</p>
+    <p class="merknad">Jevnt fall i hver sone: 1:50 fra sluket ut til dusjsonekanten, så 1:100 videre til høyeste punkt. Rør, ujevnt undergulv og nedsenket dusj endrer forbruket, så legg på ved tvil. Til fall blandes massen ofte stivere, med litt mindre vann. Sjekk sekken.</p>
   </section>
 
-  <!-- Pris: hurtigprisen fra Malerguiden (samme nettsted, så rom og priser deles) -->
+  <!-- Pris: hurtigprisen fra Malerguiden. På iPhone har hver hjemskjerm-app sin egen lagring,
+       så den sendes over til Malerguiden-appen med «Send til Malerguiden». -->
   <section class="kalk" data-kalk="pris" hidden>
     <noscript>Prisen krever JavaScript.</noscript>
+    <div class="kort prisfeil" id="prisfeil" hidden>
+      <p>Fikk ikke åpnet prisen. Første gang trenger Pris-fanen nett, etterpå virker den uten.</p>
+      <button type="button" id="pris-igjen">Prøv igjen</button>
+    </div>
   </section>
 
   <!-- Fall til sluk -->
@@ -210,13 +220,19 @@
   // Norske brukere skriver komma. Godta begge.
   function tall(id) { var v = parseFloat(($(id).value || '').replace(/\s/g, '').replace(',', '.')); return isFinite(v) ? v : NaN; }
   function fmt(v, d) { return isFinite(v) ? v.toLocaleString('nb-NO', { minimumFractionDigits: d, maximumFractionDigits: d }) : '—'; }
+  // Hele tall uten desimal, ellers én: 5 mm, 4,5 mm, 12,5 kg
+  function fmt1(v) { return isFinite(v) ? v.toLocaleString('nb-NO', { minimumFractionDigits: 0, maximumFractionDigits: 1 }) : '—'; }
+  // Antall sekker. Avrundes først, så 220,00000000000003 kg ikke blir en sekk ekstra.
+  function antallSekker(kg, sekk) { return Math.ceil(Math.round(kg * 1000) / 1000 / sekk); }
   function sett(id, s) { $(id).textContent = s; }
   function sekker(n) { return n + (n === 1 ? ' sekk' : ' sekker'); }
   function varsler(id, liste) {
     var el = $(id); el.textContent = '';
     liste.forEach(function (t) { var d = document.createElement('div'); d.className = 'varsel'; d.textContent = t; el.appendChild(d); });
   }
-  function svinn(id) { var s = tall(id); return 1 + (isFinite(s) ? s : 0) / 100; }
+  // Svinn i prosent. Negativt svinn gir ingen mening, og regnes som 0.
+  function svinn(id) { var s = tall(id); return 1 + (isFinite(s) && s > 0 ? s : 0) / 100; }
+  function negativtSvinn(id) { return tall(id) < 0 ? ['Svinn kan ikke være negativt. Regnet uten svinn.'] : []; }
 
   var tekst = {};
 
@@ -226,15 +242,15 @@
       ['fb-sekker', 'fb-kg', 'fb-vann'].forEach(function (i) { sett(i, '—'); });
       varsler('fb-varsler', ['Fyll inn areal, lagtykkelse, forbruk og sekkestørrelse.']); tekst.flatt = ''; return;
     }
-    var kg = areal * tykk * forbruk * svinn('fb-svinn'), n = Math.ceil(kg / sekk), vann = n * sekk * VANN_PER_KG;
+    var kg = areal * tykk * forbruk * svinn('fb-svinn'), n = antallSekker(kg, sekk), vann = n * sekk * VANN_PER_KG;
     $('fb-sekker').innerHTML = n + '<small>' + (n === 1 ? 'sekk' : 'sekker') + '</small>';
     sett('fb-kg', fmt(kg, 0) + ' kg'); sett('fb-vann', fmt(vann, 0) + ' liter');
-    var v = [];
+    var v = negativtSvinn('fb-svinn');
     if (tykk < 4) v.push('Lagtykkelsen er under minste lagtykkelse på 4 mm (weberfloor 120 Reno).');
     if (tykk > 50) v.push('Over 50 mm i ett sjikt. Bygg opp i flere omganger, med priming mellom.');
     if ($('fb-varme').checked) v.push(VARMEKABEL);
     varsler('fb-varsler', v);
-    tekst.flatt = 'Avretting ' + fmt(areal, 1) + ' m² × ' + fmt(tykk, 0) + ' mm: ' + sekker(n) + ' à ' + fmt(sekk, 0) + ' kg (' + fmt(kg, 0) + ' kg inkl. svinn), ca. ' + fmt(vann, 0) + ' liter vann.';
+    tekst.flatt = 'Avretting ' + fmt1(areal) + ' m² × ' + fmt1(tykk) + ' mm: ' + sekker(n) + ' à ' + fmt1(sekk) + ' kg (' + fmt(kg, 0) + ' kg inkl. svinn), ca. ' + fmt(vann, 0) + ' liter vann.';
   }
 
   function regnBad() {
@@ -246,30 +262,41 @@
       varsler('bad-varsler', ['Fyll inn areal, avstander, forbruk og sekkestørrelse.']); tekst.bad = ''; return;
     }
     // Dusjsonen faller 1:50 (20 mm/m) fra sluket til kanten, resten 1:100 (10 mm/m) ut til høyeste punkt.
-    // Snittet av et fall mot et punktsluk er 2/3 av fallhøyden (pyramide), mot en renne 1/2.
+    // Mot en renne (én retning) er snittet halve fallhøyden i begge soner. Mot et punktsluk er
+    // dusjsonen en pyramide (2/3 av fallhøyden). Resten av gulvet er en ring rundt den: snittet
+    // der regnes som for en ring fra dusjsonekanten (a) ut til høyeste punkt (b).
     var rest = Math.max(areal - dusj, 0);
     var fallDusj = kant * 20, hKant = sluk + fallDusj;
     var fallRest = Math.max(hoy - kant, 0) * 10, hHoy = hKant + fallRest;
-    var snittDusj = sluk + fallDusj * faktor, snittRest = hKant + fallRest * faktor;
+    var faktorRest = faktor;
+    if (faktor > 0.6 && hoy > kant) {
+      var a = kant, b = hoy;
+      faktorRest = ((b * b * b - a * a * a) / 3 - a * (b * b - a * a) / 2) / ((b * b - a * a) / 2 * (b - a));
+    }
+    var snittDusj = sluk + fallDusj * faktor, snittRest = hKant + fallRest * faktorRest;
     var kg = (dusj * snittDusj + rest * snittRest) * forbruk * svinn('bad-svinn');
-    var n = Math.ceil(kg / sekk), vann = n * sekk * VANN_PER_KG;
+    if (!(kg > 0)) {
+      ['bad-sekker', 'bad-kg', 'bad-vann', 'bad-spenn'].forEach(function (i) { sett(i, '—'); });
+      varsler('bad-varsler', ['Ingen masse å legge med disse tallene. Sjekk tykkelsen ved sluket og avstandene.']); tekst.bad = ''; return;
+    }
+    var n = antallSekker(kg, sekk), vann = n * sekk * VANN_PER_KG;
     $('bad-sekker').innerHTML = n + '<small>' + (n === 1 ? 'sekk' : 'sekker') + '</small>';
     sett('bad-kg', fmt(kg, 0) + ' kg'); sett('bad-vann', fmt(vann, 0) + ' liter');
-    sett('bad-spenn', fmt(sluk, 0) + ' → ' + fmt(hKant, 0) + ' → ' + fmt(hHoy, 0) + ' mm');
-    var v = [];
+    sett('bad-spenn', fmt1(sluk) + ' → ' + fmt1(hKant) + ' → ' + fmt1(hHoy) + ' mm');
+    var v = negativtSvinn('bad-svinn');
     if (dusj > areal) v.push('Dusjsonen er større enn hele badet. Sjekk arealene.');
     if (hoy < kant) v.push('Høyeste punkt er nærmere sluket enn dusjsonekanten. Sjekk avstandene.');
     if (sluk < 4) v.push('Tykkelsen ved sluket er under minste lagtykkelse på 4 mm (weberfloor 120 Reno).');
     if (hHoy > 50) v.push('Høyeste punkt blir ' + fmt(hHoy, 0) + ' mm, over 50 mm i ett sjikt. Bygg opp i flere omganger, med priming mellom.');
     if ($('bad-varme').checked) v.push(VARMEKABEL);
     varsler('bad-varsler', v);
-    tekst.bad = 'Bad ' + fmt(areal, 1) + ' m² med fall (' + fmt(sluk, 0) + ' → ' + fmt(hKant, 0) + ' → ' + fmt(hHoy, 0) + ' mm): ' + sekker(n) + ' à ' + fmt(sekk, 0) + ' kg (' + fmt(kg, 0) + ' kg inkl. svinn), ca. ' + fmt(vann, 0) + ' liter vann.';
+    tekst.bad = 'Bad ' + fmt1(areal) + ' m² med fall (' + fmt1(sluk) + ' → ' + fmt1(hKant) + ' → ' + fmt1(hHoy) + ' mm): ' + sekker(n) + ' à ' + fmt1(sekk) + ' kg (' + fmt(kg, 0) + ' kg inkl. svinn), ca. ' + fmt(vann, 0) + ' liter vann.';
   }
 
   function regnFall() {
     var d = tall('fall-dist');
-    sett('fall-50', d > 0 ? fmt(d * 20, 0) + ' mm' : '—');
-    sett('fall-100', d > 0 ? fmt(d * 10, 0) + ' mm' : '—');
+    sett('fall-50', d > 0 ? fmt1(d * 20) + ' mm' : '—');
+    sett('fall-100', d > 0 ? fmt1(d * 10) + ' mm' : '—');
   }
 
   function regnAlt() { regnFlatt(); regnBad(); regnFall(); }
@@ -295,14 +322,26 @@
     el.addEventListener('change', function () { regnAlt(); lagre(); });
   });
 
+  // Feltnavn til VoiceOver: hvert felt får navnet som står til venstre
+  document.querySelectorAll('.felt').forEach(function (f) {
+    var navn = f.querySelector('.navn'), el = f.querySelector('input, select');
+    if (!navn || !el || el.getAttribute('aria-label')) return;
+    var t = (navn.firstChild && navn.firstChild.textContent || navn.textContent).trim();
+    el.setAttribute('aria-label', t);
+    f.querySelectorAll('.tall button').forEach(function (b) { b.setAttribute('aria-label', b.getAttribute('aria-label') + ': ' + t); });
+  });
+
   // − og +
   document.querySelectorAll('.tall').forEach(function (boks) {
     var inn = boks.querySelector('input'), steg = parseFloat(boks.dataset.steg) || 1;
     var knapper = boks.querySelectorAll('button');
     function endre(retning) {
       var v = tall(inn.id); if (!isFinite(v)) v = 0;
-      var ny = Math.max(0, Math.round((v + retning * steg) / steg) * steg);
+      // Legg til (eller trekk fra) ett steg: 20,5 + 1 = 21,5. Avrund bare bort flyttallsstøy.
       var des = (String(steg).split('.')[1] || '').length;
+      var gange = Math.pow(10, Math.max(des, 2));
+      var ny = Math.max(0, Math.round((v + retning * steg) * gange) / gange);
+      des = Math.max(des, (String(ny).split('.')[1] || '').length);
       inn.value = fmt(ny, des).replace(/\s/g, '');
       regnAlt(); lagre();
     }
@@ -312,33 +351,60 @@
 
   // Faner
   // Pris: lastes først når fanen åpnes. Kopier til jobb åpner jobben i Malerguiden.
-  var ramme = null;
+  var ramme = null, rammeTid = null;
   function plasserRamme() {
     if (!ramme) return;
     var topp = Math.round(document.querySelector('.faner').getBoundingClientRect().bottom + 8);
+    // Det synlige området: på iPhone krymper det når tastaturet er oppe, så feltene ikke havner bak
+    var vv = window.visualViewport, bunn = vv ? vv.height + vv.offsetTop : innerHeight;
     ramme.style.top = topp + 'px';
-    ramme.style.height = (innerHeight - topp) + 'px'; // en iframe strekker seg ikke av seg selv
+    ramme.style.height = Math.max(120, Math.round(bunn - topp)) + 'px'; // en iframe strekker seg ikke av seg selv
   }
+  // Har Malerguiden startet i rammen? (Den merker seg selv med klassen «innebygd».)
+  function prisLastet() {
+    try { return !!(ramme.contentDocument && ramme.contentDocument.documentElement.classList.contains('innebygd')); }
+    catch (e) { return false; }
+  }
+  function visPrisfeil(feil) {
+    $('prisfeil').hidden = !feil;
+    if (ramme) ramme.style.visibility = feil ? 'hidden' : '';
+  }
+  function lagRamme() {
+    if (ramme) ramme.remove();
+    ramme = document.createElement('iframe');
+    ramme.className = 'prisramme';
+    ramme.title = 'Hurtigpris';
+    ramme.src = '../Malerguiden/#hurtigpris';
+    ramme.addEventListener('load', function () {
+      // Litt tid til å starte; uten nett vises nettleserens feilside i stedet
+      setTimeout(function () { if (ramme) visPrisfeil(!prisLastet()); }, 1500);
+    });
+    clearTimeout(rammeTid);
+    rammeTid = setTimeout(function () { if (ramme && !prisLastet()) visPrisfeil(true); }, 10000);
+    document.body.appendChild(ramme);
+    plasserRamme();
+  }
+  $('pris-igjen').addEventListener('click', function () { visPrisfeil(false); lagRamme(); });
   function visFane(navn) {
     document.querySelectorAll('.faner button').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.fane === navn)); });
     document.querySelectorAll('.kalk').forEach(function (k) { k.hidden = k.dataset.kalk !== navn; });
     var pris = navn === 'pris';
     document.body.classList.toggle('pris-aktiv', pris);
-    if (pris && !ramme) {
-      ramme = document.createElement('iframe');
-      ramme.className = 'prisramme';
-      ramme.title = 'Hurtigpris';
-      ramme.src = '../Malerguiden/#hurtigpris';
-      document.body.appendChild(ramme);
-    }
+    if (pris && !ramme) lagRamme();
     if (ramme) ramme.hidden = !pris;
     if (pris) { scrollTo(0, 0); plasserRamme(); }
     try { localStorage.setItem(FANE, navn); } catch (e) { /* ingen lagring */ }
   }
   addEventListener('resize', plasserRamme);
+  if (window.visualViewport) {
+    visualViewport.addEventListener('resize', plasserRamme);
+    visualViewport.addEventListener('scroll', plasserRamme);
+  }
   document.querySelectorAll('.faner button').forEach(function (b) { b.addEventListener('click', function () { visFane(b.dataset.fane); }); });
   var startFane = 'flatt';
   try { startFane = localStorage.getItem(FANE) || 'flatt'; } catch (e) { /* standard */ }
+  // Pris trenger nett første gang: uten nett startes det på Gulv i stedet for på en tom side
+  if (startFane === 'pris' && navigator.onLine === false) startFane = 'flatt';
   visFane(['flatt', 'bad', 'fall', 'pris'].indexOf(startFane) >= 0 ? startFane : 'flatt');
 
   // Kopier svaret, f.eks. til en bestilling
