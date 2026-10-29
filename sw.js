@@ -1,7 +1,7 @@
 /* Offline: nett først (så nye versjoner kommer med en gang), lagret kopi når nettet mangler.
    Bare filene til denne appen, og bare i appens egen cache (opphavet deles med andre apper).
    Pris-fanen henter Malerguiden, som har sin egen offline-støtte. */
-const VERSJON = 'malerkalk-2';
+const VERSJON = 'malerkalk-3';
 const FILER = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 const VENT_MS = 2500;
 
